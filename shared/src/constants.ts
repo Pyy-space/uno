@@ -1,0 +1,10 @@
+export const CARD_COLORS = ['red', 'yellow', 'green', 'blue'] as const;
+export const CARD_NUMBERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] as const;
+export const INITIAL_HAND_SIZE = 5;
+export const MAX_PLAYERS = 7;
+export const MIN_PLAYERS = 2;
+export const WILD_DRAW_FOUR_PENALTY = 4;
+export const DRAW_TWO_PENALTY = 2;
+export const UNO_PENALTY = 2;
+export const CHALLENGE_SUCCESS_PENALTY = 6;
+export const CHALLENGE_FAIL_PENALTY = 4;
