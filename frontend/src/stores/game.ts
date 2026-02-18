@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import type { GameRoom, Card } from '../services/websocket';
-import { CardType, useWebSocket } from '../services/websocket';
+import { CardType, CardColor, useWebSocket } from '../services/websocket';
 
 export const useGameStore = defineStore('game', () => {
   const ws = useWebSocket();

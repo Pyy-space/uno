@@ -9,7 +9,8 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Card, CardColor, CardType } from '../services/websocket';
+import type { Card } from '../services/websocket';
+import { CardColor, CardType } from '../services/websocket';
 
 const props = defineProps<{
   card: Card;
