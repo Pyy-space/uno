@@ -168,6 +168,3 @@ npm run build
 #### GameRoom.vue
 游戏房间，显示游戏界面和玩家操作
 
-## 许可证
-
-MIT
