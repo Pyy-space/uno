@@ -100,6 +100,9 @@ export class UnoServer {
       case MessageType.TOGGLE_READY:
         this.handleToggleReady(clientId);
         break;
+      case MessageType.REJOIN_ROOM:
+        this.handleRejoinRoom(clientId, message.roomId, message.playerName, message.clientId);
+        break;
       default:
         this.sendError(ws, 'Unknown message type');
     }
@@ -371,6 +374,67 @@ export class UnoServer {
         type: MessageType.GAME_STATE_UPDATED,
         gameState
       });
+    } catch (error: any) {
+      this.sendError(clientId, error.message);
+    }
+  }
+
+  private handleRejoinRoom(clientId: string, roomId: string, playerName: string, oldClientId: string): void {
+    try {
+      const client = this.roomManager.getClient(clientId);
+      if (client) {
+        client.name = playerName;
+      }
+
+      const game = this.roomManager.getGame(roomId);
+      if (!game) {
+        this.sendError(clientId, 'Room not found');
+        return;
+      }
+
+      const room = game.getRoom();
+      if (room.players.length >= 7) {
+        this.sendError(clientId, 'Room is full');
+        return;
+      }
+
+      // 检查是否是之前的玩家重新加入
+      const existingPlayerIndex = room.players.findIndex(p => p.id === oldClientId);
+      if (existingPlayerIndex !== -1 && client) {
+        // 更新现有玩家的WebSocket连接
+        game.updatePlayerConnection(oldClientId, clientId);
+        this.roomManager.updatePlayerConnection(oldClientId, clientId, roomId);
+        
+        const gameState = game.getRoomCopy();
+        this.sendToClient(clientId, {
+          type: MessageType.REJOIN_SUCCESS,
+          gameState
+        });
+        
+        this.roomManager.broadcastToRoom(roomId, {
+          type: MessageType.PLAYER_JOINED,
+          playerId: clientId,
+          playerName: client.name,
+          gameState
+        }, clientId);
+      } else if (client) {
+        // 新玩家加入
+        this.roomManager.joinRoom(clientId, roomId);
+        const gameState = game.getRoomCopy();
+        this.sendToClient(clientId, {
+          type: MessageType.ROOM_JOINED,
+          roomId,
+          gameState
+        });
+        this.roomManager.broadcastToRoom(roomId, {
+          type: MessageType.PLAYER_JOINED,
+          playerId: clientId,
+          playerName: client.name,
+          gameState
+        }, clientId);
+      }
+      
+      this.broadcastRoomList();
     } catch (error: any) {
       this.sendError(clientId, error.message);
     }

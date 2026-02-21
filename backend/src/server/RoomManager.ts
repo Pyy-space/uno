@@ -210,4 +210,17 @@ export class RoomManager {
   getRoomCount(): number {
     return this.rooms.size;
   }
+
+  setPlayerToRoom(clientId: string, roomId: string): void {
+    this.playerToRoom.set(clientId, roomId);
+  }
+
+  updatePlayerConnection(oldClientId: string, newClientId: string, roomId: string): void {
+    const client = this.clients.get(newClientId);
+    if (client) {
+      client.roomId = roomId;
+      this.playerToRoom.set(newClientId, roomId);
+      this.playerToRoom.delete(oldClientId);
+    }
+  }
 }

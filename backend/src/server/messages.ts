@@ -10,6 +10,7 @@ export enum MessageType {
   CHALLENGE_WILD_DRAW_FOUR = 'challenge_wild_draw_four',
   GET_ROOM_LIST = 'get_room_list',
   TOGGLE_READY = 'toggle_ready',
+  REJOIN_ROOM = 'rejoin_room',
   ROOM_CREATED = 'room_created',
   ROOM_JOINED = 'room_joined',
   ROOM_LEFT = 'room_left',
@@ -18,7 +19,8 @@ export enum MessageType {
   PLAYER_JOINED = 'player_joined',
   PLAYER_LEFT = 'player_left',
   ERROR = 'error',
-  ROOM_LIST = 'room_list'
+  ROOM_LIST = 'room_list',
+  REJOIN_SUCCESS = 'rejoin_success'
 }
 
 export interface CreateRoomMessage {

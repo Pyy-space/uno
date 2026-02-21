@@ -80,6 +80,8 @@ export class WebSocketService {
   private roomList = ref<RoomInfo[]>([]);
 
   constructor() {
+    // 从本地存储加载游戏状态
+    this.loadGameState();
     this.connect();
   }
 
@@ -91,6 +93,8 @@ export class WebSocketService {
         console.log('WebSocket connected');
         this.connected.value = true;
         this.reconnectAttempts = 0;
+        // 连接成功后尝试重新加入房间
+        this.tryRejoinRoom();
       };
 
       this.ws.onmessage = (event) => {
@@ -120,6 +124,45 @@ export class WebSocketService {
     }
   }
 
+  private saveGameState(): void {
+    const gameState = {
+      clientId: this.clientId.value,
+      playerName: this.playerName.value,
+      currentRoom: this.currentRoom.value
+    };
+    localStorage.setItem('unoGameState', JSON.stringify(gameState));
+  }
+
+  private loadGameState(): void {
+    const savedState = localStorage.getItem('unoGameState');
+    if (savedState) {
+      try {
+        const gameState = JSON.parse(savedState);
+        this.clientId.value = gameState.clientId || '';
+        this.playerName.value = gameState.playerName || '';
+        this.currentRoom.value = gameState.currentRoom || null;
+      } catch (error) {
+        console.error('Error loading game state:', error);
+        localStorage.removeItem('unoGameState');
+      }
+    }
+  }
+
+  private clearGameState(): void {
+    localStorage.removeItem('unoGameState');
+  }
+
+  private tryRejoinRoom(): void {
+    if (this.currentRoom.value && this.playerName.value) {
+      console.log('Attempting to rejoin room:', this.currentRoom.value.id);
+      this.send('rejoin_room', {
+        roomId: this.currentRoom.value.id,
+        playerName: this.playerName.value,
+        clientId: this.clientId.value
+      });
+    }
+  }
+
   private attemptReconnect(): void {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
@@ -134,17 +177,21 @@ export class WebSocketService {
     if (type === 'connected') {
       this.clientId.value = data.clientId;
       this.playerName.value = data.playerName;
+      this.saveGameState();
     } else if (type === 'room_list') {
       this.roomList.value = data.rooms || [];
-    } else if (type === 'room_created' || type === 'room_joined' || type === 'game_started' || type === 'game_state_updated') {
+    } else if (type === 'room_created' || type === 'room_joined' || type === 'game_started' || type === 'game_state_updated' || type === 'rejoin_success') {
       if (data.gameState) {
         this.currentRoom.value = data.gameState;
+        this.saveGameState();
       }
     } else if (type === 'room_left') {
       this.currentRoom.value = null;
+      this.clearGameState();
     } else if (type === 'player_joined' || type === 'player_left') {
       if (data.gameState) {
         this.currentRoom.value = data.gameState;
+        this.saveGameState();
       }
     } else if (type === 'error') {
       console.error('Server error:', data.error);
@@ -185,6 +232,7 @@ export class WebSocketService {
 
   leaveRoom(): void {
     this.send('leave_room', {});
+    this.clearGameState();
   }
 
   startGame(): void {

@@ -311,4 +311,11 @@ export class UnoGame {
     }
     return player.id;
   }
+
+  updatePlayerConnection(oldClientId: string, newClientId: string): void {
+    const player = this.room.players.find(p => p.id === oldClientId);
+    if (player) {
+      player.id = newClientId;
+    }
+  }
 }
