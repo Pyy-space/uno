@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.CHALLENGE_FAIL_PENALTY = exports.CHALLENGE_SUCCESS_PENALTY = exports.UNO_PENALTY = exports.DRAW_TWO_PENALTY = exports.WILD_DRAW_FOUR_PENALTY = exports.MIN_PLAYERS = exports.MAX_PLAYERS = exports.INITIAL_HAND_SIZE = exports.CARD_NUMBERS = exports.CARD_COLORS = void 0;
+exports.CARD_COLORS = ['red', 'yellow', 'green', 'blue'];
+exports.CARD_NUMBERS = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+exports.INITIAL_HAND_SIZE = 5;
+exports.MAX_PLAYERS = 7;
+exports.MIN_PLAYERS = 2;
+exports.WILD_DRAW_FOUR_PENALTY = 4;
+exports.DRAW_TWO_PENALTY = 2;
+exports.UNO_PENALTY = 2;
+exports.CHALLENGE_SUCCESS_PENALTY = 6;
+exports.CHALLENGE_FAIL_PENALTY = 4;
