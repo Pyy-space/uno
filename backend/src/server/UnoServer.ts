@@ -202,9 +202,18 @@ export class UnoServer {
         type: MessageType.GAME_STARTED,
         gameState
       });
+      this.broadcastGameLog(client.roomId, '🎮 游戏开始！');
     } catch (error: any) {
       this.sendError(clientId, error.message);
     }
+  }
+
+  private broadcastGameLog(roomId: string, message: string): void {
+    const timestamp = new Date().toLocaleTimeString();
+    this.roomManager.broadcastToRoom(roomId, {
+      type: MessageType.GAME_LOG,
+      log: `[${timestamp}] ${message}`
+    });
   }
 
   private handlePlayCard(clientId: string, cardId: string, chosenColor?: string): void {
@@ -221,8 +230,25 @@ export class UnoServer {
     }
 
     try {
+      const room = game.getRoom();
+      const player = room.players.find(p => p.id === clientId);
+      const card = player?.hand.find(c => c.id === cardId);
+      
       game.playCard(clientId, cardId, chosenColor as any);
       const gameState = game.getRoomCopy();
+      
+      let logMessage = `${client?.name || 'Player'} 出了牌`;
+      if (chosenColor) {
+        const colorNames: Record<string, string> = {
+          red: '红色',
+          yellow: '黄色',
+          green: '绿色',
+          blue: '蓝色'
+        };
+        logMessage += ` 并选择了 ${colorNames[chosenColor] || chosenColor}`;
+      }
+      this.broadcastGameLog(client.roomId, logMessage);
+      
       this.roomManager.broadcastToRoom(client.roomId, {
         type: MessageType.GAME_STATE_UPDATED,
         gameState
@@ -248,6 +274,7 @@ export class UnoServer {
     try {
       game.skipTurn(clientId);
       const gameState = game.getRoomCopy();
+      this.broadcastGameLog(client.roomId, `${client?.name || 'Player'} 抽了一张牌`);
       this.roomManager.broadcastToRoom(client.roomId, {
         type: MessageType.GAME_STATE_UPDATED,
         gameState
@@ -273,6 +300,7 @@ export class UnoServer {
     try {
       game.callUno(clientId);
       const gameState = game.getRoomCopy();
+      this.broadcastGameLog(client.roomId, `📢 ${client?.name || 'Player'} 喊了 UNO!`);
       this.roomManager.broadcastToRoom(client.roomId, {
         type: MessageType.GAME_STATE_UPDATED,
         gameState

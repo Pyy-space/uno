@@ -103,19 +103,25 @@ export class RoomManager {
 
     const game = this.rooms.get(client.roomId);
     if (game) {
-      const playerId = game.getPlayerIdByClientId(clientId);
-      game.removePlayer(playerId);
-      const room = game.getRoom();
-      if (room.players.length === 0) {
-        this.rooms.delete(client.roomId);
-        console.log(`Room ${client.roomId} deleted (no players)`);
+      try {
+        const playerId = game.getPlayerIdByClientId(clientId);
+        game.removePlayer(playerId);
+        const room = game.getRoom();
+        if (room.players.length === 0) {
+          this.rooms.delete(client.roomId);
+          console.log(`Room ${client.roomId} deleted (no players)`);
+        }
+        this.addHistory(game, 'player_left');
+      } catch (error) {
+        // 玩家可能已经不在房间中，忽略错误
+        console.log(`Player ${clientId} not found in room ${client.roomId}`);
       }
-      this.addHistory(game, 'player_left');
     }
 
+    const roomName = client.roomId;
     client.roomId = null;
     this.playerToRoom.delete(clientId);
-    console.log(`${client.name} left room ${client.roomId}`);
+    console.log(`${client.name} left room ${roomName}`);
   }
 
   getGame(roomId: string): UnoGame | undefined {

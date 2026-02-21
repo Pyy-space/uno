@@ -7,7 +7,7 @@
           <span class="text-5xl">🎴</span> UNO 游戏 - 等待室 <span class="text-5xl">✨</span>
         </h2>
         
-        <div class="mb-6 p-4 bg-white/20 rounded-xl border border-white/30 backdrop-blur-sm">
+        <div class="mb-6 p-4 bg-white/20 backdrop-blur-sm rounded-xl border border-white/30 shadow-lg">
           <div class="flex justify-between items-center">
             <div>
               <p class="text-sm text-white mb-1">🔑 房间码</p>
@@ -73,72 +73,122 @@
       </div>
     </div>
 
-    <!-- 游戏中 -->
-    <div v-if="currentRoom.state === 'playing'" class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 p-4">
-      <div class="max-w-6xl mx-auto">
-        <div class="game-header mb-6 p-4 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20 shadow-lg">
-          <div class="flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-white">
-              <span class="text-3xl">🎴</span> {{ currentRoom.name }}
-            </h1>
-            <button @click="handleLeaveRoom" class="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-semibold hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-lg shadow-red-600/30 border border-red-500/50 transform hover:scale-105">
-              🚪 离开房间
+    <!-- 游戏中 - 统一牌桌布局 -->
+    <div v-if="currentRoom.state === 'playing'" class="game-screen min-h-screen bg-gradient-to-br from-emerald-900 via-emerald-800 to-teal-900 flex">
+      <!-- 左侧游戏日志 -->
+      <div class="game-log-sidebar w-72 bg-black/30 backdrop-blur-sm border-r border-white/10 p-4 flex flex-col">
+        <h3 class="text-lg font-semibold mb-4 text-white text-center flex items-center justify-center gap-2">
+          📋 游戏日志
+        </h3>
+        <div class="log-entries flex-1 overflow-y-auto space-y-2">
+          <div v-if="gameLog.length === 0" class="text-white/60 text-center py-4 text-sm">
+            游戏开始，等待玩家出牌...
+          </div>
+          <div 
+            v-for="(log, index) in gameLog" 
+            :key="index"
+            class="log-entry text-white/90 text-sm p-2 bg-white/5 rounded-lg border border-white/10"
+          >
+            {{ log }}
+          </div>
+        </div>
+      </div>
+
+      <!-- 主游戏区域 -->
+      <div class="main-area flex-1 flex flex-col p-4">
+        <!-- 顶部信息栏 -->
+        <div class="top-bar mb-4 p-3 bg-black/20 backdrop-blur-sm rounded-2xl border border-white/10 flex justify-between items-center">
+          <h1 class="text-xl font-bold text-white flex items-center gap-2">
+            <span class="text-2xl">🎴</span> {{ currentRoom.name }}
+          </h1>
+          <div class="flex gap-3 items-center">
+            <div :class="['px-4 py-2 rounded-xl font-bold text-white shadow-lg', currentColorClass]">
+              当前: {{ currentColorText }}
+            </div>
+            <div v-if="currentRoom.accumulatedDraw > 0" class="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-600 rounded-xl font-bold text-white shadow-lg animate-pulse">
+              +{{ currentRoom.accumulatedDraw }}
+            </div>
+            <button @click="handleLeaveRoom" class="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg border border-red-400/50">
+              🚪 离开
             </button>
           </div>
         </div>
 
-        <div class="game-info mb-6 flex justify-center gap-4">
-          <div :class="['px-6 py-3 rounded-xl font-bold text-white transition-all duration-300 shadow-lg transform hover:scale-105', currentColorClass]">
-            当前颜色: {{ currentColorText }}
-          </div>
-          <div v-if="currentRoom.accumulatedDraw > 0" class="px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-700 rounded-xl font-bold text-white shadow-lg shadow-orange-600/30 border border-orange-500/50 transform hover:scale-105">
-            累计抽牌: {{ currentRoom.accumulatedDraw }}
-          </div>
-        </div>
-
-        <div class="other-players mb-6 flex justify-center gap-4 flex-wrap">
-          <div 
-            v-for="(player, index) in otherPlayers" 
-            :key="player.id" 
-            :class="['bg-white/10 backdrop-blur-sm rounded-2xl p-4 border transition-all duration-300 min-w-[180px] text-center shadow-lg transform hover:scale-105', index === currentRoom.currentPlayerIndex ? 'border-yellow-500 shadow-yellow-500/50' : 'border-white/30']"
-          >
-            <div class="flex items-center justify-center gap-2 mb-2">
-              <div :class="['w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm', ['bg-gradient-to-br from-red-600 to-red-700', 'bg-gradient-to-br from-blue-600 to-blue-700', 'bg-gradient-to-br from-green-600 to-green-700', 'bg-gradient-to-br from-yellow-600 to-yellow-700', 'bg-gradient-to-br from-purple-600 to-purple-700', 'bg-gradient-to-br from-pink-600 to-pink-700', 'bg-gradient-to-br from-indigo-600 to-indigo-700'][index % 7]]">
-                {{ (player.name || 'Player').charAt(0).toUpperCase() }}
+        <!-- 统一牌桌区域 -->
+        <div class="game-table flex-1 bg-gradient-to-br from-emerald-700 via-emerald-600 to-teal-700 rounded-3xl border-4 border-amber-900/50 shadow-2xl relative overflow-hidden">
+          <!-- 桌布纹理 -->
+          <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0); background-size: 20px 20px;"></div>
+          
+          <!-- 所有玩家围绕牌桌 -->
+          <div class="players-container absolute inset-0">
+            <div 
+              v-for="(player, index) in allPlayers" 
+              :key="player.id"
+              class="player-slot absolute"
+              :style="getPlayerStyle(index, allPlayers.length)"
+            >
+              <div 
+                :class="['player-card backdrop-blur-md rounded-xl p-3 border-2 transition-all duration-300 shadow-lg', 
+                  player.id === myPlayer?.id ? 'bg-purple-600/40 border-purple-400 shadow-purple-500/30' : 
+                  isCurrentPlayer(player.id) ? 'bg-yellow-500/30 border-yellow-400 shadow-yellow-500/50 animate-pulse' : 
+                  'bg-white/10 border-white/20']"
+              >
+                <div class="flex items-center gap-2 mb-1">
+                  <div :class="['w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md', 
+                    player.id === myPlayer?.id ? 'bg-gradient-to-br from-purple-500 to-purple-600' : 
+                    ['bg-gradient-to-br from-red-500 to-red-600', 'bg-gradient-to-br from-blue-500 to-blue-600', 
+                    'bg-gradient-to-br from-green-500 to-green-600', 'bg-gradient-to-br from-yellow-500 to-yellow-600', 
+                    'bg-gradient-to-br from-pink-500 to-pink-600', 'bg-gradient-to-br from-indigo-500 to-indigo-600'][getPlayerColorIndex(player.id)]]"
+                  >
+                    {{ (player.name || 'Player').charAt(0).toUpperCase() }}
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-1">
+                      <span class="font-semibold text-white text-sm drop-shadow">{{ player.name || 'Player' }}</span>
+                      <span v-if="player.id === myPlayer?.id" class="text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">你</span>
+                    </div>
+                    <div class="text-white/80 text-xs">{{ player.hand.length }} 张牌</div>
+                  </div>
+                </div>
+                <div v-if="player.hand.length === 1" class="text-red-400 font-bold text-xs text-center animate-pulse">UNO!</div>
+                <div v-if="isCurrentPlayer(player.id)" class="text-yellow-300 font-bold text-xs text-center">出牌中...</div>
               </div>
-              <span class="font-semibold text-white">{{ player.name || 'Player' }}</span>
             </div>
-            <div class="text-white text-sm mb-2">{{ player.hand.length }} 张牌</div>
-            <div v-if="player.hand.length === 1" class="text-red-500 font-bold animate-pulse">UNO!</div>
           </div>
-        </div>
 
-        <div class="play-area mb-6 flex justify-center p-8">
-          <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border-4 border-white/30 shadow-2xl w-full max-w-md">
-            <h3 class="text-lg font-semibold mb-4 text-white text-center">弃牌堆</h3>
-            <div class="flex justify-center">
-              <div class="transform transition-all duration-300 hover:scale-110">
-                <!-- 移除弃牌堆卡牌显示 -->
+          <!-- 中央牌堆 -->
+          <div class="card-pile-center absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
+            <div class="bg-black/20 backdrop-blur-md rounded-2xl p-5 border-2 border-white/20 shadow-xl">
+              <h3 class="text-sm font-semibold mb-3 text-white/80 text-center">牌堆</h3>
+              <div class="flex justify-center">
+                <div v-if="currentRoom.lastPlayedCard" class="transform transition-all duration-300 hover:scale-110">
+                  <Card :card="currentRoom.lastPlayedCard" :playable="false" />
+                </div>
+                <div v-else class="w-20 h-28 bg-gradient-to-br from-gray-700 to-gray-800 rounded-lg border-2 border-white/20 flex items-center justify-center shadow-lg">
+                  <span class="text-white text-xl">🎴</span>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div v-if="myPlayer" class="my-hand bg-white/10 backdrop-blur-lg rounded-3xl p-6 border-4 border-white/30 shadow-2xl">
-          <div class="flex justify-between items-center mb-4">
-            <div class="flex items-center gap-3">
-              <div :class="['w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-lg', 'bg-gradient-to-br from-purple-600 to-purple-700 border-2 border-purple-500']">
+        <!-- 底部手牌区域 -->
+        <div v-if="myPlayer" class="my-hand-area mt-4 bg-black/30 backdrop-blur-md rounded-2xl p-4 border-2 border-white/10 shadow-xl">
+          <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-2">
+              <div :class="['w-9 h-9 rounded-full flex items-center justify-center text-white font-bold shadow-lg', 'bg-gradient-to-br from-purple-500 to-purple-600 border-2 border-purple-400']">
                 {{ (myPlayer.name || 'Player').charAt(0).toUpperCase() }}
               </div>
               <span class="font-medium text-white">{{ myPlayer.name || 'Player' }}</span>
+              <span v-if="isMyTurn" class="text-yellow-400 font-bold animate-pulse text-sm">你的回合</span>
             </div>
-            <div v-if="myPlayer.hand.length === 1" class="text-red-500 font-bold animate-pulse">UNO!</div>
+            <div v-if="myPlayer.hand.length === 1" class="text-red-400 font-bold animate-pulse text-sm">UNO!</div>
           </div>
-          <div class="cards flex justify-center gap-3 flex-wrap mb-4">
+          <div class="cards flex justify-center gap-2 flex-wrap mb-3">
             <div 
               v-for="card in myPlayer.hand" 
               :key="card.id"
-              class="transform transition-all duration-300 hover:scale-110 hover:translate-y-[-10px]"
+              class="transform transition-all duration-300 hover:scale-110 hover:translate-y-[-8px]"
             >
               <Card 
                 :card="card" 
@@ -148,10 +198,10 @@
             </div>
           </div>
           <div class="actions flex justify-center gap-3">
-            <button v-if="isMyTurn" @click="handleDrawCard" class="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all duration-300 shadow-lg shadow-blue-600/30 border border-blue-500/50 transform hover:scale-105">
+            <button v-if="isMyTurn" @click="handleDrawCard" class="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-lg border border-blue-400/50 transform hover:scale-105 text-sm">
               🎴 抽牌
             </button>
-            <button v-if="isMyTurn && myPlayer.hand.length === 2" @click="handleCallUno" class="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl font-semibold hover:from-red-700 hover:to-red-800 transition-all duration-300 shadow-lg shadow-red-600/30 border border-red-500/50 transform hover:scale-105">
+            <button v-if="isMyTurn && myPlayer.hand.length === 2" @click="handleCallUno" class="px-5 py-2.5 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-lg border border-red-400/50 transform hover:scale-105 text-sm">
               📢 喊 UNO
             </button>
           </div>
@@ -159,19 +209,53 @@
       </div>
     </div>
 
-    <!-- 游戏结束 -->
+    <!-- 游戏结束 - 排行榜 -->
     <div v-if="currentRoom.state === 'finished'" class="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-indigo-900 flex items-center justify-center p-4">
-      <div class="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 max-w-md w-full border-4 border-white/30 text-center">
+      <div class="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 max-w-lg w-full border-4 border-white/30 text-center">
         <h2 class="text-4xl font-bold mb-6 text-white">
           <span class="text-5xl">🎉</span> 游戏结束! <span class="text-5xl">🎉</span>
         </h2>
-        <div v-if="currentRoom.winner" class="winner mb-6 p-6 bg-white/20 backdrop-blur-sm rounded-xl border-2 border-white/30 shadow-lg">
-          <p class="text-white text-sm mb-2">🏆 获胜者</p>
-          <p class="text-3xl font-bold text-white">{{ currentRoom.winner.name }}</p>
+        
+        <!-- 排行榜 -->
+        <div class="rankings mb-6">
+          <h3 class="text-xl font-bold text-white mb-4">🏆 排行榜</h3>
+          <div class="space-y-3">
+            <div 
+              v-for="(ranking, index) in currentRoom.rankings" 
+              :key="ranking.playerId"
+              :class="['p-4 rounded-xl flex items-center justify-between transition-all duration-300',
+                index === 0 ? 'bg-gradient-to-r from-yellow-500 to-amber-600 border-2 border-yellow-400 shadow-lg shadow-yellow-500/30' :
+                index === 1 ? 'bg-gradient-to-r from-gray-400 to-gray-500 border-2 border-gray-300 shadow-lg' :
+                index === 2 ? 'bg-gradient-to-r from-orange-600 to-orange-700 border-2 border-orange-500 shadow-lg' :
+                'bg-white/10 border border-white/20']"
+            >
+              <div class="flex items-center gap-3">
+                <div :class="['w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-md',
+                  index === 0 ? 'bg-yellow-400 text-yellow-900' :
+                  index === 1 ? 'bg-gray-300 text-gray-700' :
+                  index === 2 ? 'bg-orange-500 text-white' :
+                  'bg-white/20 text-white']"
+                >
+                  {{ ranking.rank }}
+                </div>
+                <span class="font-semibold text-white text-lg">{{ ranking.playerName }}</span>
+                <span v-if="ranking.playerId === myPlayer?.id" class="text-xs bg-purple-600 text-white px-2 py-1 rounded-full">你</span>
+              </div>
+              <div class="text-white font-bold text-lg">
+                {{ index === 0 ? '🥇 冠军' : index === 1 ? '🥈 亚军' : index === 2 ? '🥉 季军' : `第${ranking.rank}名` }}
+              </div>
+            </div>
+          </div>
         </div>
-        <button @click="handleLeaveRoom" class="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 transition-all duration-300 shadow-lg shadow-purple-600/30 border border-purple-500/50 transform hover:scale-105">
-          🏠 返回大厅
-        </button>
+        
+        <div class="space-y-3">
+          <button @click="handleRestartGame" class="w-full py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-lg border border-green-400/50 transform hover:scale-105">
+            🔄 重新开始
+          </button>
+          <button @click="handleLeaveRoom" class="w-full py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl font-semibold hover:from-purple-600 hover:to-purple-700 transition-all duration-300 shadow-lg border border-purple-400/50 transform hover:scale-105">
+            🏠 返回大厅
+          </button>
+        </div>
       </div>
     </div>
 
@@ -180,10 +264,10 @@
       <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border-4 border-white/30 shadow-2xl text-center max-w-md w-full">
         <h3 class="text-2xl font-bold mb-6 text-white">选择颜色</h3>
         <div class="color-options flex justify-center gap-6">
-          <div class="color-option w-20 h-20 rounded-xl cursor-pointer transition-all duration-300 hover:scale-125 shadow-lg bg-gradient-to-br from-red-500 to-red-700 border-2 border-red-800" @click="handleColorPick(CardColor.RED)"></div>
-          <div class="color-option w-20 h-20 rounded-xl cursor-pointer transition-all duration-300 hover:scale-125 shadow-lg bg-gradient-to-br from-yellow-400 to-yellow-700 border-2 border-yellow-800" @click="handleColorPick(CardColor.YELLOW)"></div>
-          <div class="color-option w-20 h-20 rounded-xl cursor-pointer transition-all duration-300 hover:scale-125 shadow-lg bg-gradient-to-br from-green-500 to-green-700 border-2 border-green-800" @click="handleColorPick(CardColor.GREEN)"></div>
-          <div class="color-option w-20 h-20 rounded-xl cursor-pointer transition-all duration-300 hover:scale-125 shadow-lg bg-gradient-to-br from-blue-500 to-blue-700 border-2 border-blue-800" @click="handleColorPick(CardColor.BLUE)"></div>
+          <div class="color-option w-20 h-20 rounded-xl cursor-pointer transition-all duration-300 hover:scale-125 shadow-lg bg-gradient-to-br from-red-500 to-red-600 border-2 border-red-400" @click="handleColorPick(CardColor.RED)"></div>
+          <div class="color-option w-20 h-20 rounded-xl cursor-pointer transition-all duration-300 hover:scale-125 shadow-lg bg-gradient-to-br from-yellow-400 to-yellow-500 border-2 border-yellow-300" @click="handleColorPick(CardColor.YELLOW)"></div>
+          <div class="color-option w-20 h-20 rounded-xl cursor-pointer transition-all duration-300 hover:scale-125 shadow-lg bg-gradient-to-br from-green-500 to-green-600 border-2 border-green-400" @click="handleColorPick(CardColor.GREEN)"></div>
+          <div class="color-option w-20 h-20 rounded-xl cursor-pointer transition-all duration-300 hover:scale-125 shadow-lg bg-gradient-to-br from-blue-500 to-blue-600 border-2 border-blue-400" @click="handleColorPick(CardColor.BLUE)"></div>
         </div>
       </div>
     </div>
@@ -210,10 +294,11 @@ const currentRoom = computed(() => gameStore.currentRoom);
 const myPlayer = computed(() => gameStore.myPlayer);
 const isMyTurn = computed(() => gameStore.isMyTurn);
 const isReady = computed(() => myPlayer.value?.isReady || false);
+const gameLog = computed(() => gameStore.gameLog);
 
-const otherPlayers = computed(() => {
-  if (!currentRoom.value || !myPlayer.value) return [];
-  return currentRoom.value.players.filter((p: any) => p.id !== myPlayer.value!.id);
+const allPlayers = computed(() => {
+  if (!currentRoom.value) return [];
+  return currentRoom.value.players;
 });
 
 const currentColorClass = computed(() => {
@@ -223,7 +308,7 @@ const currentColorClass = computed(() => {
     yellow: 'bg-gradient-to-r from-yellow-400 to-yellow-500',
     green: 'bg-gradient-to-r from-green-500 to-green-600',
     blue: 'bg-gradient-to-r from-blue-500 to-blue-600',
-    wild: 'bg-gradient-to-r from-gray-600 to-gray-700'
+    wild: 'bg-gradient-to-r from-gray-500 to-gray-600'
   };
   return colorMap[currentRoom.value.currentColor] || colorMap.wild;
 });
@@ -240,6 +325,37 @@ const currentColorText = computed(() => {
   return colorMap[currentRoom.value.currentColor] || currentRoom.value.currentColor;
 });
 
+const getPlayerStyle = (index: number, totalPlayers: number) => {
+  if (totalPlayers === 1) {
+    return { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' };
+  }
+  
+  const angle = (index / totalPlayers) * Math.PI * 2 - Math.PI / 2;
+  const radiusX = 42;
+  const radiusY = 38;
+  
+  const x = 50 + Math.cos(angle) * radiusX;
+  const y = 50 + Math.sin(angle) * radiusY;
+  
+  return {
+    left: `${x}%`,
+    top: `${y}%`,
+    transform: 'translate(-50%, -50%)'
+  };
+};
+
+const isCurrentPlayer = (playerId: string) => {
+  if (!currentRoom.value) return false;
+  const currentIndex = currentRoom.value.currentPlayerIndex;
+  return currentRoom.value.players[currentIndex]?.id === playerId;
+};
+
+const getPlayerColorIndex = (playerId: string) => {
+  if (!currentRoom.value) return 0;
+  const index = currentRoom.value.players.findIndex((p: any) => p.id === playerId);
+  return index % 7;
+};
+
 const canPlayCard = (card: any) => {
   return gameStore.canPlayCard(card);
 };
@@ -250,6 +366,13 @@ const handleLeaveRoom = () => {
 
 const handleToggleReady = () => {
   gameStore.toggleReady();
+};
+
+const handleRestartGame = () => {
+  if (myPlayer.value) {
+    gameStore.toggleReady();
+    gameStore.toggleReady();
+  }
 };
 
 const handleCardClick = (card: any) => {
@@ -279,51 +402,83 @@ const handleCallUno = () => {
   gameStore.callUno();
 };
 
-// Notification helper function (currently unused but may be used in the future)
-// const showNotification = (type: string, message: string) => {
-//   notification.value = { type, message };
-//   setTimeout(() => {
-//     notification.value = null;
-//   }, 3000);
-// };
+const showNotification = (type: string, message: string) => {
+  notification.value = { type, message };
+  setTimeout(() => {
+    notification.value = null;
+  }, 3000);
+};
 
 </script>
 
 <style scoped>
+.game-screen {
+  display: flex;
+  min-height: 100vh;
+}
+
+.game-log-sidebar {
+  width: 288px;
+  display: flex;
+  flex-direction: column;
+}
+
+.log-entries {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.log-entries::-webkit-scrollbar {
+  width: 4px;
+}
+
+.log-entries::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 2px;
+}
+
+.log-entries::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.game-table {
+  position: relative;
+  flex: 1;
+  min-height: 400px;
+}
+
+.players-container {
+  position: absolute;
+  inset: 0;
+}
+
+.player-slot {
+  position: absolute;
+}
+
+.player-card {
+  min-width: 130px;
+  max-width: 160px;
+}
+
+.card-pile-center {
+  z-index: 10;
+}
+
 .cards {
   display: flex;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-/* 牌背面样式 */
-.card-back {
-  width: 90px;
-  height: 130px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  position: relative;
-  overflow: hidden;
-}
-
-/* 牌桌纹理效果 */
-.play-area,
-.my-hand {
-  position: relative;
-}
-
-.play-area::before,
-.my-hand::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 70%);
-  border-radius: inherit;
-  pointer-events: none;
-}
-
-/* 通知样式 */
 .notification {
   animation: slideIn 0.3s ease-out forwards;
 }
@@ -340,7 +495,6 @@ const handleCallUno = () => {
   background: linear-gradient(to right, #ff9800, #f57c00);
 }
 
-/* 动画效果 */
 @keyframes slideIn {
   from {
     transform: translateX(100%);
@@ -364,26 +518,28 @@ const handleCallUno = () => {
   }
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-  .card-back {
-    width: 70px;
-    height: 100px;
+@media (max-width: 1200px) {
+  .game-log-sidebar {
+    width: 220px;
   }
   
-  .card-back div {
-    font-size: 30px;
+  .player-card {
+    min-width: 110px;
+    max-width: 140px;
+    padding: 8px !important;
   }
 }
 
-@media (max-width: 480px) {
-  .card-back {
-    width: 60px;
-    height: 85px;
+@media (max-width: 768px) {
+  .game-log-sidebar {
+    display: none;
   }
   
-  .card-back div {
-    font-size: 24px;
+  .player-card {
+    min-width: 90px;
+    max-width: 110px;
+    padding: 6px !important;
+    font-size: 0.75rem;
   }
 }
 </style>

@@ -20,7 +20,8 @@ export enum MessageType {
   PLAYER_LEFT = 'player_left',
   ERROR = 'error',
   ROOM_LIST = 'room_list',
-  REJOIN_SUCCESS = 'rejoin_success'
+  REJOIN_SUCCESS = 'rejoin_success',
+  GAME_LOG = 'game_log'
 }
 
 export interface CreateRoomMessage {

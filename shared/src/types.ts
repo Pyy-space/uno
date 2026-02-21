@@ -47,6 +47,13 @@ export interface RoomHistory {
   state: string;
 }
 
+export interface PlayerRanking {
+  playerId: string;
+  playerName: string;
+  rank: number;
+  finishedAt: Date;
+}
+
 export interface GameRoom {
   id: string;
   name: string;
@@ -60,6 +67,7 @@ export interface GameRoom {
   accumulatedDraw: number;
   lastPlayedCard: Card | null;
   winner: Player | null;
+  rankings: PlayerRanking[];
   history: RoomHistory[];
   createdAt: Date;
 }

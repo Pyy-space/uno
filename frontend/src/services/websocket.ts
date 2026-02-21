@@ -78,6 +78,7 @@ export class WebSocketService {
   private playerName = ref('');
   private currentRoom = ref<GameRoom | null>(null);
   private roomList = ref<RoomInfo[]>([]);
+  private gameLog = ref<string[]>([]);
 
   constructor() {
     // 从本地存储加载游戏状态
@@ -187,11 +188,19 @@ export class WebSocketService {
       }
     } else if (type === 'room_left') {
       this.currentRoom.value = null;
+      this.gameLog.value = [];
       this.clearGameState();
     } else if (type === 'player_joined' || type === 'player_left') {
       if (data.gameState) {
         this.currentRoom.value = data.gameState;
         this.saveGameState();
+      }
+    } else if (type === 'game_log') {
+      if (data.log) {
+        this.gameLog.value.push(data.log);
+        if (this.gameLog.value.length > 50) {
+          this.gameLog.value.shift();
+        }
       }
     } else if (type === 'error') {
       console.error('Server error:', data.error);
@@ -299,6 +308,10 @@ export class WebSocketService {
 
   getRoomList(): RoomInfo[] {
     return this.roomList.value;
+  }
+
+  getGameLog(): string[] {
+    return this.gameLog.value;
   }
 }
 

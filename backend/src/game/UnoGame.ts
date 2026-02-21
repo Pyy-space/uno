@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { GameRoom, Player, Card, CardColor, CardType, GameDirection, GameState } from '../../../shared/src/types';
+import { GameRoom, Player, Card, CardColor, CardType, GameDirection, GameState, PlayerRanking } from '../../../shared/src/types';
 import { INITIAL_HAND_SIZE } from '../../../shared/src/constants';
 import { CardFactory } from './CardFactory';
 import { GameRules } from './GameRules';
@@ -21,6 +21,7 @@ export class UnoGame {
       accumulatedDraw: 0,
       lastPlayedCard: null,
       winner: null,
+      rankings: [],
       history: [],
       createdAt: new Date()
     };
@@ -76,7 +77,9 @@ export class UnoGame {
     this.room.currentPlayerIndex = 0;
     this.room.direction = GameDirection.CLOCKWISE;
     this.room.state = GameState.PLAYING;
+    this.room.currentColor = CardColor.WILD; // 初始颜色设为万能，让第一个玩家决定
     this.room.winner = null;
+    this.room.rankings = [];
 
     this.room.players.forEach(player => {
       player.hand = [];
@@ -86,17 +89,8 @@ export class UnoGame {
       player.isUnoCalled = false;
     });
 
-    let startCard: Card;
-    do {
-      startCard = this.drawCard()!;
-      if (startCard.type !== 'number') {
-        this.room.drawPile.push(startCard);
-      }
-    } while (startCard.type !== 'number');
-
-    this.room.discardPile.push(startCard);
-    this.room.currentColor = startCard.color;
-    this.room.lastPlayedCard = startCard;
+    // 不设置初始牌，让第一个玩家出牌
+    this.room.lastPlayedCard = null;
   }
 
   playCard(playerId: string, cardId: string, chosenColor?: CardColor): void {
@@ -116,7 +110,8 @@ export class UnoGame {
 
     const card = player.hand[cardIndex];
 
-    if (!GameRules.canPlayCard(card, this.room.lastPlayedCard!, this.room.currentColor)) {
+    // 游戏开始时（没有lastPlayedCard），允许玩家出任意牌
+    if (this.room.lastPlayedCard && !GameRules.canPlayCard(card, this.room.lastPlayedCard, this.room.currentColor)) {
       throw new Error('不能出这张牌');
     }
 
@@ -139,8 +134,31 @@ export class UnoGame {
     }
 
     if (player.hand.length === 0) {
-      this.room.winner = player;
-      this.room.state = GameState.FINISHED;
+      const ranking: PlayerRanking = {
+        playerId: player.id,
+        playerName: player.name,
+        rank: this.room.rankings.length + 1,
+        finishedAt: new Date()
+      };
+      this.room.rankings.push(ranking);
+      
+      if (this.room.rankings.length >= this.room.players.length - 1) {
+        const lastPlayer = this.room.players.find(p => !this.room.rankings.find(r => r.playerId === p.id));
+        if (lastPlayer) {
+          const lastRanking: PlayerRanking = {
+            playerId: lastPlayer.id,
+            playerName: lastPlayer.name,
+            rank: this.room.players.length,
+            finishedAt: new Date()
+          };
+          this.room.rankings.push(lastRanking);
+        }
+        this.room.winner = this.room.players.find(p => p.id === this.room.rankings[0]?.playerId) || null;
+        this.room.state = GameState.FINISHED;
+        return;
+      }
+      
+      this.nextTurn();
       return;
     }
 

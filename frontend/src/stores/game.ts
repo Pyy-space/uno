@@ -103,6 +103,8 @@ export const useGameStore = defineStore('game', () => {
     roomList.value = rooms;
   };
 
+  const gameLog = computed(() => ws.getGameLog());
+
   return {
     currentRoom,
     roomList: roomList,
@@ -122,6 +124,7 @@ export const useGameStore = defineStore('game', () => {
     getRoomList,
     toggleReady,
     updateRoom,
-    updateRoomList
+    updateRoomList,
+    gameLog
   };
 });
