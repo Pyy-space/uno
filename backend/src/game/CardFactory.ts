@@ -1,5 +1,6 @@
 import { Card, CardColor, CardType } from '../../../shared/src/types';
 import { CARD_COLORS, CARD_NUMBERS } from '../../../shared/src/constants';
+import { randomInt } from 'crypto';
 
 export class CardFactory {
   private static idCounter = 0;
@@ -58,10 +59,13 @@ export class CardFactory {
 
   static shuffle<T>(array: T[]): T[] {
     const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+    const len = shuffled.length;
+    
+    for (let i = len - 1; i > 0; i--) {
+      const j = randomInt(0, i + 1);
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
+    
     return shuffled;
   }
 }

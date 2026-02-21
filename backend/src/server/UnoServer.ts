@@ -216,6 +216,33 @@ export class UnoServer {
     });
   }
 
+  private getCardDisplayName(card: any): string {
+    const colorNames: Record<string, string> = {
+      red: '红色',
+      yellow: '黄色',
+      green: '绿色',
+      blue: '蓝色',
+      wild: '万能'
+    };
+    
+    const typeNames: Record<string, string> = {
+      number: '',
+      skip: '跳过',
+      reverse: '反转',
+      draw_two: '+2',
+      wild: '万能牌',
+      wild_draw_four: '万能+4'
+    };
+    
+    const colorName = colorNames[card.color] || card.color;
+    
+    if (card.type === 'number') {
+      return `${colorName} ${card.value}`;
+    } else {
+      return `${colorName} ${typeNames[card.type] || card.type}`;
+    }
+  }
+
   private handlePlayCard(clientId: string, cardId: string, chosenColor?: string): void {
     const client = this.roomManager.getClient(clientId);
     if (!client || !client.roomId) {
@@ -234,10 +261,12 @@ export class UnoServer {
       const player = room.players.find(p => p.id === clientId);
       const card = player?.hand.find(c => c.id === cardId);
       
+      const cardName = card ? this.getCardDisplayName(card) : '未知牌';
+      
       game.playCard(clientId, cardId, chosenColor as any);
       const gameState = game.getRoomCopy();
       
-      let logMessage = `${client?.name || 'Player'} 出了牌`;
+      let logMessage = `${client?.name || 'Player'} 出了 [${cardName}]`;
       if (chosenColor) {
         const colorNames: Record<string, string> = {
           red: '红色',
@@ -245,7 +274,7 @@ export class UnoServer {
           green: '绿色',
           blue: '蓝色'
         };
-        logMessage += ` 并选择了 ${colorNames[chosenColor] || chosenColor}`;
+        logMessage += ` → 选择 ${colorNames[chosenColor] || chosenColor}`;
       }
       this.broadcastGameLog(client.roomId, logMessage);
       
@@ -272,9 +301,15 @@ export class UnoServer {
     }
 
     try {
+      const room = game.getRoom();
+      const accumulatedDraw = room.accumulatedDraw;
+      
       game.skipTurn(clientId);
       const gameState = game.getRoomCopy();
-      this.broadcastGameLog(client.roomId, `${client?.name || 'Player'} 抽了一张牌`);
+      
+      const drawCount = accumulatedDraw > 0 ? accumulatedDraw : 1;
+      this.broadcastGameLog(client.roomId, `📥 ${client?.name || 'Player'} 抽了 ${drawCount} 张牌`);
+      
       this.roomManager.broadcastToRoom(client.roomId, {
         type: MessageType.GAME_STATE_UPDATED,
         gameState
