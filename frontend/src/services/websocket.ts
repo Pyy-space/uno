@@ -96,7 +96,8 @@ export class WebSocketService {
 
   private connect(): void {
     try {
-      this.ws = new WebSocket('ws://localhost:3001');
+      const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:3001';
+      this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
         console.log('WebSocket connected');
