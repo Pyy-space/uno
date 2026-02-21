@@ -43,6 +43,13 @@ export enum GameState {
   FINISHED = 'finished'
 }
 
+export interface PlayerRanking {
+  playerId: string;
+  playerName: string;
+  rank: number;
+  finishedAt: Date;
+}
+
 export interface GameRoom {
   id: string;
   name: string;
@@ -56,6 +63,7 @@ export interface GameRoom {
   accumulatedDraw: number;
   lastPlayedCard: Card | null;
   winner: Player | null;
+  rankings: PlayerRanking[];
 }
 
 export interface RoomInfo {

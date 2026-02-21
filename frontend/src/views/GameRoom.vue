@@ -402,13 +402,6 @@ const handleCallUno = () => {
   gameStore.callUno();
 };
 
-const showNotification = (type: string, message: string) => {
-  notification.value = { type, message };
-  setTimeout(() => {
-    notification.value = null;
-  }, 3000);
-};
-
 </script>
 
 <style scoped>
