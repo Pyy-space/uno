@@ -457,8 +457,8 @@ const handleCallUno = () => {
 }
 
 .player-card {
-  min-width: 130px;
-  max-width: 160px;
+  width: 140px;
+  min-height: 70px;
 }
 
 .card-pile-center {
@@ -517,8 +517,8 @@ const handleCallUno = () => {
   }
   
   .player-card {
-    min-width: 110px;
-    max-width: 140px;
+    width: 120px;
+    min-height: 60px;
     padding: 8px !important;
   }
 }
@@ -528,11 +528,71 @@ const handleCallUno = () => {
     display: none;
   }
   
+  .game-table {
+    min-height: 300px;
+  }
+  
   .player-card {
-    min-width: 90px;
-    max-width: 110px;
+    width: 90px;
+    min-height: 50px;
     padding: 6px !important;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+  }
+  
+  .player-card .w-9 {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: 0.6rem !important;
+  }
+  
+  .card-pile-center .bg-black\/20 {
+    padding: 8px !important;
+  }
+  
+  .my-hand-area {
+    padding: 8px !important;
+  }
+  
+  .my-hand-area .cards {
+    gap: 4px !important;
+  }
+  
+  .my-hand-area .actions button {
+    padding: 8px 12px !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-table {
+    min-height: 250px;
+  }
+  
+  .player-card {
+    width: 70px;
+    min-height: 45px;
+    padding: 4px !important;
+    font-size: 0.6rem;
+  }
+  
+  .player-card .w-9 {
+    width: 20px !important;
+    height: 20px !important;
+    font-size: 0.5rem !important;
+  }
+  
+  .top-bar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .top-bar h1 {
+    font-size: 1rem !important;
+  }
+  
+  .top-bar > div {
+    flex-wrap: wrap;
+    justify-content: center;
   }
 }
 </style>

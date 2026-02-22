@@ -209,7 +209,13 @@ export class UnoServer {
   }
 
   private broadcastGameLog(roomId: string, message: string): void {
-    const timestamp = new Date().toLocaleTimeString();
+    const timestamp = new Date().toLocaleTimeString('zh-CN', { 
+      timeZone: 'Asia/Shanghai',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
     this.roomManager.broadcastToRoom(roomId, {
       type: MessageType.GAME_LOG,
       log: `[${timestamp}] ${message}`

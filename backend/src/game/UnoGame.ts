@@ -119,6 +119,9 @@ export class UnoGame {
       throw new Error('万能牌必须选择颜色');
     }
 
+    // 在出牌前检查：如果玩家剩2张牌且没喊UNO，出牌后会被罚
+    const shouldPenalize = player.hand.length === 2 && !player.isUnoCalled;
+
     player.hand.splice(cardIndex, 1);
     this.room.discardPile.push(card);
     this.room.lastPlayedCard = card;
@@ -129,7 +132,8 @@ export class UnoGame {
       this.room.currentColor = card.color;
     }
 
-    if (player.hand.length === 1 && !player.isUnoCalled) {
+    // 如果出牌前剩2张牌且没喊UNO，罚抽2张
+    if (shouldPenalize) {
       this.drawCards(player, 2);
     }
 
