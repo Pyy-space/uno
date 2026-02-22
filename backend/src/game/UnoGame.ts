@@ -204,10 +204,6 @@ export class UnoGame {
       this.room.accumulatedDraw = 0;
     } else {
       const card = this.drawCard();
-      if (card && GameRules.canPlayCard(card, this.room.lastPlayedCard!, this.room.currentColor)) {
-        player.hand.push(card);
-        return;
-      }
       if (card) {
         player.hand.push(card);
       }
@@ -222,8 +218,8 @@ export class UnoGame {
       throw new Error('玩家不存在');
     }
 
-    if (player.hand.length !== 1) {
-      throw new Error('只有剩一张牌时才能喊UNO');
+    if (player.hand.length > 2) {
+      throw new Error('只有剩两张牌或更少时才能喊UNO');
     }
 
     player.isUnoCalled = true;
